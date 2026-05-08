@@ -6,6 +6,7 @@ import TrophyRoom from '@/components/sections/TrophyRoom'
 import BuiltByMeGallery from '@/components/sections/BuiltByMeGallery'
 import CertificationsWall from '@/components/sections/CertificationsWall'
 import ToolsSection from '@/components/sections/ToolsSection'
+import MeetingRoom from '@/components/sections/MeetingRoom'
 
 export const metadata: Metadata = {
   title: 'Ijaz Ahmed — SEO Expert & Digital Growth Strategist',
@@ -40,6 +41,9 @@ export default function HomePage() {
 
       {/* ── Stage 8: Tools Section — floating arsenal workbench ──── */}
       <ToolsSection />
+
+      {/* ── Stage 9: Meeting Room — contact section ───────────────── */}
+      <MeetingRoom />
     </>
   )
 }

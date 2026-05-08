@@ -433,5 +433,6 @@ export const tools: ToolEntry[] = [
 export const contact = {
   email: 'seowithejoo@gmail.com',
   phone: '+92-330-5929561',
-  linkedin: 'https://linkedin.com/in/ijaz-ahmed-seo',
+  linkedin: 'Ijaz Ahmed',
+  linkedinUrl: 'https://www.linkedin.com/in/ijaz-ahmed',
 }
