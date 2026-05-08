@@ -3,6 +3,7 @@ import HeroHallway from '@/components/sections/HeroHallway'
 import Reception from '@/components/sections/Reception'
 import ServicesCorridor from '@/components/sections/ServicesCorridor'
 import TrophyRoom from '@/components/sections/TrophyRoom'
+import BuiltByMeGallery from '@/components/sections/BuiltByMeGallery'
 
 export const metadata: Metadata = {
   title: 'Ijaz Ahmed — SEO Expert & Digital Growth Strategist',
@@ -28,6 +29,9 @@ export default function HomePage() {
 
       {/* ── Stage 5: Trophy Room — 5 case study modals ──────────── */}
       <TrophyRoom />
+
+      {/* ── Stage 6: Built By Me Gallery — horizontal scroll ────── */}
+      <BuiltByMeGallery />
     </>
   )
 }

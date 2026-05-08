@@ -296,6 +296,52 @@ export const builtByMe = [
   { name: 'Mydecorya', url: 'https://mydecorya.com' },
 ]
 
+export interface BuiltSite {
+  name: string
+  url: string
+  description: string
+  category: string
+}
+
+export const builtSites: BuiltSite[] = [
+  {
+    name: 'MG Transportation LLC',
+    url: 'https://mgtransportationllc.com',
+    description: 'Towing and recovery serving Milwaukee and nearby areas.',
+    category: 'Logistics',
+  },
+  {
+    name: 'Ammar Networks',
+    url: 'https://ammarnetworks.com',
+    description: 'Engineering and technology across telecom, power, civil, and IT.',
+    category: 'Engineering',
+  },
+  {
+    name: 'Alpha Media Assist',
+    url: 'https://alphamediassist.com',
+    description: 'Healthcare support and revenue management for medical practices.',
+    category: 'Healthcare',
+  },
+  {
+    name: 'Sahil Pak Networks',
+    url: 'https://sahilpaknetworks.com',
+    description: 'Reliable telecom solutions across Pakistan.',
+    category: 'Telecom',
+  },
+  {
+    name: 'Mydecorya',
+    url: 'https://mydecorya.com',
+    description: 'Home decor content site, scaled to 500K+ monthly visits.',
+    category: 'Content',
+  },
+  {
+    name: 'Best Homes and Kitchens',
+    url: 'https://besthomesandkitchens.com',
+    description: 'Home and kitchen renovation services.',
+    category: 'Home Services',
+  },
+]
+
 export const certifications = [
   {
     id: 'semrush-seo',
