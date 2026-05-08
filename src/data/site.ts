@@ -386,14 +386,48 @@ export const certifications: Certification[] = [
   },
 ]
 
-export const tools = [
-  { name: 'SEMrush', category: 'All-in-One SEO' },
-  { name: 'Ahrefs', category: 'Backlink Analysis' },
-  { name: 'Screaming Frog', category: 'Technical Audit' },
-  { name: 'Moz', category: 'Domain Authority' },
-  { name: 'Google Search Console', category: 'Performance Tracking' },
-  { name: 'Google Analytics', category: 'Traffic Analysis' },
-  { name: 'Google Keyword Planner', category: 'Keyword Research' },
+export interface ToolEntry {
+  name: string
+  tagline: string
+  logo: 'semrush' | 'ahrefs' | 'screamingfrog' | 'moz' | 'searchconsole' | 'analytics' | 'keywordplanner'
+}
+
+export const tools: ToolEntry[] = [
+  {
+    name: 'SEMrush',
+    tagline: 'The keyword detective. Finds gaps competitors don\'t even know they have.',
+    logo: 'semrush',
+  },
+  {
+    name: 'Ahrefs',
+    tagline: 'The bossy tool to handle real things.',
+    logo: 'ahrefs',
+  },
+  {
+    name: 'Screaming Frog',
+    tagline: 'The website bacteria killer. Finds every broken thing crawling around your site.',
+    logo: 'screamingfrog',
+  },
+  {
+    name: 'Moz',
+    tagline: 'Domain authority lie detector. Tells you the truth about your link profile.',
+    logo: 'moz',
+  },
+  {
+    name: 'Google Search Console',
+    tagline: 'Website doctor. Diagnoses indexing problems before they become symptoms.',
+    logo: 'searchconsole',
+  },
+  {
+    name: 'Google Analytics',
+    tagline: 'User behavior microscope. Watches what people do, not what they say.',
+    logo: 'analytics',
+  },
+  {
+    name: 'Google Keyword Planner',
+    tagline: 'The search demand thermometer. Hot keywords, cold keywords, all of them.',
+    logo: 'keywordplanner',
+  },
 ]
 
 export const contact = {
