@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import HeroHallway from '@/components/sections/HeroHallway'
 import Reception from '@/components/sections/Reception'
+import ServicesCorridor from '@/components/sections/ServicesCorridor'
 
 export const metadata: Metadata = {
   title: 'Ijaz Ahmed — SEO Expert & Digital Growth Strategist',
@@ -20,6 +21,9 @@ export default function HomePage() {
 
       {/* ── Stage 3: Reception — About + Animated Stats + Story ── */}
       <Reception />
+
+      {/* ── Stage 4: Services Corridor — 9 interactive 3D doors ── */}
+      <ServicesCorridor />
     </>
   )
 }
