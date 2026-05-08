@@ -191,56 +191,98 @@ export const services: ServiceEntry[] = [
   },
 ]
 
-export const caseStudies = [
+export interface CaseStudy {
+  id: string
+  name: string
+  year: string
+  headlineMetric: string
+  description: string
+  keyWins: string[]
+  tags: string[]
+}
+
+export const caseStudies: CaseStudy[] = [
   {
     id: 'mydecorya',
-    client: 'Mydecorya.com',
-    type: 'Personal Project',
-    highlight: '0 → 500K+ monthly organic visits',
+    name: 'MYDECORYA',
+    year: '2022 to 2025',
+    headlineMetric: '500K+ monthly organic visits scaled from zero',
     description:
-      'Built and scaled a home decor content site from zero to 500K+ monthly organic visitors through systematic content marketing and technical SEO.',
-    tags: ['Content Marketing', 'Technical SEO', 'On-Page SEO'],
-    featured: true,
+      'From 2023 to 2025, I scaled my own SEO project to over 500K monthly organic visits. My work focused on understanding search intent, fixing technical gaps, and building content clusters that actually rank.',
+    keyWins: [
+      'Researched keywords deeply with focus on real user intent, not just volume',
+      'Wrote SEO-focused content aligned with search behavior',
+      'Built topical clusters for authority',
+      'Fixed technical SEO and Core Web Vitals',
+      'Audited and refreshed existing content for higher CTR',
+      'Adapted strategy to Google updates',
+    ],
+    tags: ['Personal Project', 'Content Strategy', 'Technical SEO'],
   },
   {
     id: 'care-pharmacy',
-    client: 'The Care Pharmacy',
-    type: 'Client',
-    highlight: 'Organic growth + local dominance',
+    name: 'THE CARE PHARMACY',
+    year: '2025 to 2026',
+    headlineMetric: '40% organic traffic increase via AEO strategy',
     description:
-      'Comprehensive SEO strategy for a UK pharmacy improving local and organic search visibility in a competitive healthcare niche.',
-    tags: ['Local SEO', 'On-Page SEO', 'Technical SEO'],
-    featured: false,
+      'Drove growth for The Care Pharmacy with advanced Technical SEO and Off-page SEO strategies that improved organic visibility and authority. Worked closely with content and dev teams to optimize crawl efficiency, fix site-wide issues, and strengthen the backlink profile.',
+    keyWins: [
+      'Comprehensive technical audits (Core Web Vitals, indexability)',
+      'Optimized structured data and internal linking',
+      'Implemented AEO strategy targeting featured snippets and People Also Ask',
+      'Achieved 40% increase in organic traffic',
+      'Executed authority outreach and digital PR campaigns',
+    ],
+    tags: ['AEO', 'Technical SEO', 'Off-page SEO', 'Healthcare'],
   },
   {
     id: 'batley-pharmacy',
-    client: 'Batley Pharmacy',
-    type: 'Client',
-    highlight: 'Top local rankings achieved',
+    name: 'BATLEY PHARMACY',
+    year: '2025 to 2026',
+    headlineMetric: 'Healthcare e-commerce SEO and content optimization',
     description:
-      'Local SEO campaign targeting pharmacy-related keywords in the Batley area, driving foot traffic and online enquiries.',
-    tags: ['Local SEO', 'Google Business Profile'],
-    featured: false,
+      'Improved organic visibility and content performance for a UK healthcare e-commerce site through targeted SEO, on-page optimization, and search-intent driven content.',
+    keyWins: [
+      'Keyword research with Ahrefs, SEMrush, and Google Keyword Planner',
+      'Optimized product and category pages for search intent',
+      'On-page SEO improvements (titles, meta, headings, internal links)',
+      'Content gap analysis via Search Console and competitor research',
+      'Sustained local dominance and lead generation',
+    ],
+    tags: ['E-commerce', 'On-page SEO', 'Healthcare'],
   },
   {
     id: 'exeter-diesels',
-    client: 'Exeter Diesels',
-    type: 'Client',
-    highlight: 'Increased organic traffic',
+    name: 'EXETER DIESELS',
+    year: '2026',
+    headlineMetric: 'Built a UK used vans website ranking on Google UK',
     description:
-      'Technical and on-page SEO for an automotive business in Exeter, UK, competing in a geographically targeted market.',
-    tags: ['Technical SEO', 'On-Page SEO'],
-    featured: false,
+      'Designed and developed a professional website for a UK business specializing in used vans. Focused on user-friendly digital presence, inventory showcase, and organic traffic through strategic SEO.',
+    keyWins: [
+      'Designed a responsive site for desktop and mobile',
+      'Implemented full SEO strategy targeting high-intent queries',
+      'Optimized meta titles, descriptions, headings, image alt texts',
+      'Improved page speed and Core Web Vitals',
+      'Built high-quality backlinks and local citations',
+      'Measurable growth in organic traffic and lead generation',
+    ],
+    tags: ['Web Development', 'Local SEO', 'Automotive'],
   },
   {
     id: 'hope-welfare-trust',
-    client: 'Hope Welfare Trust',
-    type: 'Client',
-    highlight: 'Expanded online presence',
+    name: 'HOPE WELFARE TRUST',
+    year: '2026',
+    headlineMetric: 'UK charity SEO with on-page and technical optimization',
     description:
-      'Digital growth strategy for a non-profit to increase donations, volunteer sign-ups, and brand awareness organically.',
-    tags: ['Content Marketing', 'On-Page SEO'],
-    featured: false,
+      'Worked on the official site of Hope Welfare Trust, a UK-based charity. Focused on improving digital presence through modern SEO practices, content optimization, and performance enhancements to grow visibility and engagement.',
+    keyWins: [
+      'On-page SEO including keyword mapping, meta optimization, internal linking',
+      'Improved technical SEO (site speed, mobile, crawlability)',
+      'Keyword research and competitor analysis',
+      'Content optimized for search intent and higher SERP rankings',
+      'Performance tracking via Google Analytics and Search Console',
+    ],
+    tags: ['Non-profit', 'Technical SEO', 'On-page SEO'],
   },
 ]
 
