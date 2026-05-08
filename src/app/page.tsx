@@ -4,6 +4,7 @@ import Reception from '@/components/sections/Reception'
 import ServicesCorridor from '@/components/sections/ServicesCorridor'
 import TrophyRoom from '@/components/sections/TrophyRoom'
 import BuiltByMeGallery from '@/components/sections/BuiltByMeGallery'
+import CertificationsWall from '@/components/sections/CertificationsWall'
 
 export const metadata: Metadata = {
   title: 'Ijaz Ahmed — SEO Expert & Digital Growth Strategist',
@@ -32,6 +33,9 @@ export default function HomePage() {
 
       {/* ── Stage 6: Built By Me Gallery — horizontal scroll ────── */}
       <BuiltByMeGallery />
+
+      {/* ── Stage 7: Certifications Wall — spotlight reveal ──────── */}
+      <CertificationsWall />
     </>
   )
 }

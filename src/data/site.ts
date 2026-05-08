@@ -342,27 +342,47 @@ export const builtSites: BuiltSite[] = [
   },
 ]
 
-export const certifications = [
+export interface Certification {
+  name: string
+  issuer: string
+  issued: string | null
+  expires: string | null
+  credentialId: string | null
+  logo: 'semrush' | 'google'
+}
+
+export const certifications: Certification[] = [
   {
-    id: 'semrush-seo',
-    name: 'SEMrush SEO Toolkit Course',
+    name: 'SEO Course By SEMrush',
     issuer: 'SEMrush',
-    description:
-      'Comprehensive SEO certification covering all major aspects of search engine optimization strategy and execution.',
+    issued: 'Jul 2025',
+    expires: 'Jul 2030',
+    credentialId: '3a9d9d9c30',
+    logo: 'semrush',
   },
   {
-    id: 'semrush-brian-dean',
-    name: 'Link Building with Brian Dean',
-    issuer: 'SEMrush × Brian Dean',
-    description:
-      "Advanced link building strategies co-created with one of the world's leading SEO authorities.",
+    name: 'SEMrush SEO Crash Course with Brian Dean',
+    issuer: 'SEMrush',
+    issued: 'Jul 2024',
+    expires: 'Jul 2026',
+    credentialId: '0a1fb6bac7',
+    logo: 'semrush',
   },
   {
-    id: 'google-analytics',
-    name: 'Google Analytics Certification',
+    name: 'Advanced Google Analytics Certification',
     issuer: 'Google',
-    description:
-      'Official Google certification for Analytics data analysis, reporting, and conversion tracking.',
+    issued: null,
+    expires: null,
+    credentialId: null,
+    logo: 'google',
+  },
+  {
+    name: 'Google Analytics for Beginners Certification',
+    issuer: 'Google',
+    issued: null,
+    expires: null,
+    credentialId: null,
+    logo: 'google',
   },
 ]
 
