@@ -113,7 +113,7 @@ export default function HeroHallway() {
           ref={scrollHintRef}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none select-none"
         >
-          <span className="font-mono text-[10px] tracking-[0.45em] uppercase text-white/30">
+          <span className="font-mono text-[10px] tracking-[0.45em] uppercase text-white">
             Scroll to enter
           </span>
           <div className="h-10 w-px animate-pulse bg-gradient-to-b from-cyan-accent/30 to-transparent" />
@@ -123,7 +123,7 @@ export default function HeroHallway() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
           <p
             ref={introRef}
-            className="font-mono text-sm tracking-[0.38em] uppercase text-white/45 opacity-0"
+            className="font-mono text-sm tracking-[0.38em] uppercase text-white opacity-0"
           >
             Step into the office of an SEO expert
           </p>
@@ -135,17 +135,30 @@ export default function HeroHallway() {
           ref={nameRef}
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-0"
         >
-          <h2
-            className="font-sans font-bold tracking-[0.18em] uppercase text-cyan-accent"
-            style={{
-              fontSize: 'clamp(4.5rem, 16vw, 11rem)',
-              textShadow:
-                '0 0 30px rgba(0,240,255,0.9), 0 0 70px rgba(0,240,255,0.5), 0 0 130px rgba(0,240,255,0.25)',
-              animation: 'none', // override glow-pulse so GSAP opacity controls it
-            }}
-          >
-            IJAZ
-          </h2>
+          <div className="flex flex-col items-center">
+            <h2
+              className="font-sans font-bold tracking-[0.18em] uppercase text-cyan-accent"
+              style={{
+                fontSize: 'clamp(4.5rem, 16vw, 11rem)',
+                textShadow:
+                  '0 0 30px rgba(0,240,255,0.9), 0 0 70px rgba(0,240,255,0.5), 0 0 130px rgba(0,240,255,0.25)',
+                animation: 'none',
+              }}
+            >
+              IJAZ
+            </h2>
+            <h2
+              className="font-sans font-bold tracking-[0.18em] uppercase text-cyan-accent"
+              style={{
+                fontSize: 'clamp(4.5rem, 16vw, 11rem)',
+                textShadow:
+                  '0 0 30px rgba(0,240,255,0.9), 0 0 70px rgba(0,240,255,0.5), 0 0 130px rgba(0,240,255,0.25)',
+                animation: 'none',
+              }}
+            >
+              AHMED
+            </h2>
+          </div>
         </div>
 
       </div>
