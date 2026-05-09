@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -178,6 +178,140 @@ function Door({ progress }: { progress: SceneProgress }) {
   )
 }
 
+// ─── Floating Particles ──────────────────────────────────────────────────────
+// Outer shell: skip entirely when prefers-reduced-motion is set
+
+function FloatingParticles() {
+  const prefersReduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (prefersReduced) return null
+  return <ParticlesInner />
+}
+
+const PARTICLE_COUNT = 100
+
+function ParticlesInner() {
+  const { geometry, baseX, baseY, speeds, swayPhases, swayFreqs } = useMemo(() => {
+    const positions = new Float32Array(PARTICLE_COUNT * 3)
+    const colors = new Float32Array(PARTICLE_COUNT * 3)
+    const bX = new Float32Array(PARTICLE_COUNT)
+    const bY = new Float32Array(PARTICLE_COUNT)
+    const spd = new Float32Array(PARTICLE_COUNT)
+    const phases = new Float32Array(PARTICLE_COUNT)
+    const freqs = new Float32Array(PARTICLE_COUNT)
+
+    const cyan = new THREE.Color('#00F0FF')
+    const amber = new THREE.Color('#FFB800')
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      bX[i] = (Math.random() - 0.5) * 3.0       // x: -1.5 to 1.5, well within walls at +-2
+      bY[i] = Math.random() * 2.5 + 0.3          // y: 0.3 to 2.8
+      const z = Math.random() * 16.0 - 9.0       // z: full corridor depth
+
+      positions[i * 3] = bX[i]
+      positions[i * 3 + 1] = bY[i]
+      positions[i * 3 + 2] = z
+
+      const col = Math.random() < 0.7 ? cyan : amber   // 70% cyan, 30% amber
+      colors[i * 3] = col.r
+      colors[i * 3 + 1] = col.g
+      colors[i * 3 + 2] = col.b
+
+      spd[i] = (Math.random() * 0.15 + 0.04) * (Math.random() < 0.5 ? 1.0 : -1.0)
+      phases[i] = Math.random() * Math.PI * 2
+      freqs[i] = Math.random() * 0.4 + 0.15
+    }
+
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+    return { geometry: geo, baseX: bX, baseY: bY, speeds: spd, swayPhases: phases, swayFreqs: freqs }
+  }, [])
+
+  useFrame(({ clock }) => {
+    const positions = geometry.attributes.position.array as Float32Array
+    const t = clock.elapsedTime
+    const range = 2.5
+    const min = 0.3
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      // Vertical drift: time-based, wraps continuously within corridor height
+      let y = baseY[i] + t * speeds[i]
+      y = ((y - min) % range + range) % range + min
+      // Horizontal sway: pure sine oscillation around base X, no drift
+      positions[i * 3] = baseX[i] + Math.sin(t * swayFreqs[i] + swayPhases[i]) * 0.25
+      positions[i * 3 + 1] = y
+      // Z stays constant per particle
+    }
+
+    geometry.attributes.position.needsUpdate = true
+  })
+
+  return (
+    <points geometry={geometry}>
+      <pointsMaterial
+        size={0.03}
+        vertexColors
+        transparent
+        opacity={0.4}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        sizeAttenuation
+      />
+    </points>
+  )
+}
+
+// ─── Amber Halo ───────────────────────────────────────────────────────────────
+// Warm amber glow behind the door: a point light + oversized soft plane.
+// The plane uses depthTest=false so it reads as a soft ambient warmth over the
+// door area without fighting the depth buffer. Pulse skipped if reduced-motion.
+
+function AmberHalo() {
+  const planeRef = useRef<THREE.Mesh>(null!)
+  const lightRef = useRef<THREE.PointLight>(null!)
+  const prefersReducedRef = useRef(
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+
+  useFrame(({ clock }) => {
+    if (!planeRef.current) return
+    const mat = planeRef.current.material as THREE.MeshBasicMaterial
+    if (prefersReducedRef.current) {
+      mat.opacity = 0.18
+      lightRef.current.intensity = 2.0
+      return
+    }
+    // Breathing pulse: period ~3.5 s, amplitude 0.6 to 1.0
+    const pulse = 0.6 + Math.sin(clock.elapsedTime * 1.795) * 0.2
+    mat.opacity = pulse * 0.28
+    lightRef.current.intensity = pulse * 2.5
+  })
+
+  return (
+    <group position={[0, 1.5, -9.1]}>
+      {/* Point light slightly behind door illuminates frame edges with warm amber */}
+      <pointLight ref={lightRef} color="#FFB800" intensity={2.0} distance={6} decay={0} />
+      {/* Softbox plane — larger than door frame, additive blended, depth-test off */}
+      <mesh ref={planeRef}>
+        <planeGeometry args={[5.5, 4.5]} />
+        <meshBasicMaterial
+          color="#FFB800"
+          transparent
+          opacity={0.18}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          depthTest={false}
+          fog={false}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 // ─── Canvas export ────────────────────────────────────────────────────────────
 
 export default function HallwayScene({ progress }: { progress: SceneProgress }) {
@@ -195,6 +329,8 @@ export default function HallwayScene({ progress }: { progress: SceneProgress }) 
       <CameraController progress={progress} />
       <Hallway />
       <Door progress={progress} />
+      <FloatingParticles />
+      <AmberHalo />
     </Canvas>
   )
 }
