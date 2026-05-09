@@ -23,6 +23,7 @@ export default function HeroHallway() {
   const scrollHintRef = useRef<HTMLDivElement>(null)
   const introRef = useRef<HTMLParagraphElement>(null)
   const nameRef = useRef<HTMLDivElement>(null)
+  const thresholdRef = useRef<HTMLDivElement>(null)
   // Plain mutable object — GSAP animates .value, useFrame reads it each tick
   const progress = useRef<SceneProgress>({ value: 0 })
 
@@ -82,6 +83,24 @@ export default function HeroHallway() {
         scale: 1.06,
         scrollTrigger: { ...trigger, start: '66% top', end: '85% top', scrub: true },
       })
+
+      // Threshold blackout: builds from clear to black during the final camera approach.
+      // Starts at 90% (door fully open) and completes at 99% (hallway runway ends).
+      // Keeping it in the last 9% means only ~36 vh of black before Reception appears,
+      // so the door-opening animation plays in full before the fade-through.
+      gsap.fromTo(
+        thresholdRef.current,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: '90% top',
+            end: '99% top',
+            scrub: true,
+          },
+        }
+      )
     }, containerRef)
 
     return () => ctx.revert()
@@ -171,6 +190,16 @@ export default function HeroHallway() {
             background: 'linear-gradient(to bottom, transparent, #0A0A0A)',
             zIndex: 10,
           }}
+        />
+
+        {/* ── Threshold blackout ────────────────────────────────── */}
+        {/* GSAP drives this from opacity 0 to 1 during the final camera approach.
+            Simulates the moment of crossing the door threshold. */}
+        <div
+          ref={thresholdRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-0"
+          style={{ background: '#0A0A0A', zIndex: 20 }}
         />
 
       </div>

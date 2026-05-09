@@ -188,9 +188,31 @@ function Hi({ children }: { children: React.ReactNode }) {
   return <span className="text-cyan-accent font-semibold">{children}</span>
 }
 
+// ── Corridor-continuation drift particles (module-level so the array is stable) ─
+
+const DRIFT_PARTICLES = [
+  { left: '11%', top: '6%',  color: '#00F0FF', size: 1.5, dur: 4.2, delay: 0.0 },
+  { left: '79%', top: '13%', color: '#FFB800', size: 1.0, dur: 5.8, delay: 1.2 },
+  { left: '32%', top: '21%', color: '#00F0FF', size: 2.0, dur: 3.9, delay: 0.6 },
+  { left: '87%', top: '7%',  color: '#00F0FF', size: 1.5, dur: 6.1, delay: 2.0 },
+  { left: '54%', top: '29%', color: '#FFB800', size: 1.0, dur: 4.7, delay: 0.9 },
+  { left: '21%', top: '17%', color: '#00F0FF', size: 1.5, dur: 5.3, delay: 1.6 },
+  { left: '66%', top: '25%', color: '#FFB800', size: 1.0, dur: 4.0, delay: 0.4 },
+  { left: '7%',  top: '32%', color: '#00F0FF', size: 2.0, dur: 7.2, delay: 2.5 },
+]
+
 // ── Reception ─────────────────────────────────────────────────────────────────
 
 export default function Reception() {
+  // Track section entrance for the corridor echo overlay
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress: entranceProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  })
+  // Fades the corridor echo out after ~12% of the section height has scrolled past
+  const corridorOpacity = useTransform(entranceProgress, [0, 0.12], [1, 0])
+
   // UPGRADE 7: scroll-synced story reveal
   const storyRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -217,7 +239,7 @@ export default function Reception() {
   const p3Y = useTransform(scrollYProgress, [0.50, 0.70], [30, 0])
 
   return (
-    <section id="reception" className="relative" style={{ background: '#0A0A0A' }}>
+    <section ref={sectionRef} id="reception" className="relative" style={{ background: '#0A0A0A' }}>
 
       {/* ── Top atmosphere fade ─────────────────────────────────────────────── */}
       {/* Continues hallway darkness into the Reception — pairs with the Hallway's bottom fade */}
@@ -225,7 +247,7 @@ export default function Reception() {
         aria-hidden="true"
         className="pointer-events-none absolute top-0 left-0 right-0"
         style={{
-          height: '20vh',
+          height: '35vh',
           background: 'linear-gradient(to bottom, #0A0A0A, transparent)',
           zIndex: 5,
         }}
@@ -243,6 +265,60 @@ export default function Reception() {
           zIndex: 5,
         }}
       />
+
+      {/* ── Corridor echo overlay ─────────────────────────────────────────────── */}
+      {/* Fades out as the user scrolls deeper — simulates standing just inside the doorway */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 left-0 right-0"
+        style={{ height: '55vh', zIndex: 6, opacity: corridorOpacity }}
+      >
+        {/* Left wall continuation */}
+        <div
+          style={{
+            position: 'absolute', inset: 0, right: 'auto', width: '16%',
+            background: 'linear-gradient(to right, rgba(8,8,8,0.88), transparent)',
+          }}
+        />
+        {/* Right wall continuation */}
+        <div
+          style={{
+            position: 'absolute', inset: 0, left: 'auto', right: 0, width: '16%',
+            background: 'linear-gradient(to left, rgba(8,8,8,0.88), transparent)',
+          }}
+        />
+        {/* Ceiling continuation */}
+        <div
+          style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: '28%',
+            background: 'linear-gradient(to bottom, rgba(8,8,8,0.75), transparent)',
+          }}
+        />
+        {/* Atmospheric drift particles carried in from the corridor */}
+        {DRIFT_PARTICLES.map((p, i) => (
+          <motion.div
+            key={i}
+            aria-hidden="true"
+            className="absolute rounded-full"
+            style={{
+              left: p.left,
+              top: p.top,
+              width: p.size,
+              height: p.size,
+              background: p.color,
+              opacity: 0.38,
+              boxShadow: `0 0 ${p.size * 4}px ${p.color}`,
+            }}
+            animate={{ y: [-9, 9, -9] }}
+            transition={{
+              repeat: Infinity,
+              duration: p.dur,
+              ease: 'easeInOut',
+              delay: p.delay,
+            }}
+          />
+        ))}
+      </motion.div>
 
       {/* ── UPGRADE 1: 3D office room background ───────────────────────────── */}
       {/* Absolutely behind all content. pointer-events-none so it doesn't eat clicks. */}

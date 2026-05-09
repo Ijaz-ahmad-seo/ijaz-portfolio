@@ -9,18 +9,33 @@ export interface SceneProgress {
 }
 
 // ─── Camera ──────────────────────────────────────────────────────────────────
-// Glides from z=8 (entrance) toward z=-6 (just before the door at z=-9)
-// over the first 60 % of scroll. Stays put while the door opens.
+// Three-phase forward push:
+//   0-60%  entrance: z=8 to z=-6 (smoothstep)
+//   60-90% door-open: z=-6 to z=-8.5 (continues forward as door slides apart)
+//   90-100% threshold: z=-8.5 to z=-8.85 (slow final approach, camera just short of door)
 
 function CameraController({ progress }: { progress: SceneProgress }) {
   const { camera } = useThree()
 
   useFrame(() => {
     const p = progress.value
-    const t = Math.min(p / 0.6, 1)
-    // Smoothstep for cinematic ease
-    const s = t * t * (3 - 2 * t)
-    camera.position.set(0, 1.5, THREE.MathUtils.lerp(8, -6, s))
+    let z: number
+
+    if (p <= 0.6) {
+      const t = p / 0.6
+      const s = t * t * (3 - 2 * t)
+      z = THREE.MathUtils.lerp(8, -6, s)
+    } else if (p <= 0.9) {
+      const t = (p - 0.6) / 0.3
+      const s = t * t * (3 - 2 * t)
+      z = THREE.MathUtils.lerp(-6, -8.5, s)
+    } else {
+      const t = (p - 0.9) / 0.1
+      const s = t * t * (3 - 2 * t)
+      z = THREE.MathUtils.lerp(-8.5, -8.85, s)
+    }
+
+    camera.position.set(0, 1.5, z)
     camera.lookAt(0, 1.5, -30)
   })
 
