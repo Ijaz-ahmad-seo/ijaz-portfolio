@@ -34,6 +34,20 @@ const STATS: StatDef[] = [
   { end: 15, suffix: '+', label: 'WEBSITES OPTIMIZED' },
 ]
 
+// ── Prefers-reduced-motion hook ───────────────────────────────────────────────
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+
 // ── Count-up hook ─────────────────────────────────────────────────────────────
 
 function useCountUp(end: number, duration: number, active: boolean): number {
@@ -58,11 +72,12 @@ function useCountUp(end: number, duration: number, active: boolean): number {
 // ── UPGRADE 4: Interactive StatCard ───────────────────────────────────────────
 // RAF-throttled cursor tilt + pulsing glow halo + lift on hover + count-finish flash
 
-function StatCard({ end, suffix, label, delay }: StatDef & { delay: number }) {
+function StatCard({ end, suffix, label, delay, reducedMotion }: StatDef & { delay: number; reducedMotion: boolean }) {
   const outerRef = useRef<HTMLDivElement>(null)
   const inView = useInView(outerRef, { once: true, margin: '-80px 0px' })
   const count = useCountUp(end, 1500, inView)
   const numControls = useAnimation()
+  const [isHovered, setIsHovered] = useState(false)
 
   // 3D tilt — driven by mouse position, smoothed with spring
   const mouseX = useMotionValue(0)
@@ -111,15 +126,12 @@ function StatCard({ end, suffix, label, delay }: StatDef & { delay: number }) {
     // Parent carries perspective so rotateX/Y produce genuine 3D depth
     <div ref={outerRef} className="flex-1 min-w-0" style={{ perspective: '1000px' }}>
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        // Separate transition for entry vs hover — whileHover transition overrides locally
+        initial={reducedMotion ? {} : { opacity: 0, y: 20 }}
+        animate={reducedMotion ? {} : (inView ? { opacity: 1, y: 0 } : {})}
         transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-        whileHover={{
-          y: -10,
-          scale: 1.03,
-          transition: { duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] },
-        }}
+        whileHover={reducedMotion ? {} : { y: -6, transition: { duration: 0.25, ease: 'easeOut' } }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => { setIsHovered(false); onMouseLeave() }}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         style={{ rotateX, rotateY, willChange: 'transform' }}
@@ -163,16 +175,22 @@ function StatCard({ end, suffix, label, delay }: StatDef & { delay: number }) {
 
         {/* Number + label */}
         <div className="relative z-10 flex flex-col items-center">
-          <motion.span
-            animate={numControls}
-            className="font-mono font-bold text-white leading-none"
-            style={{
-              fontSize: 'clamp(2.5rem, 5vw, 3.75rem)',
-              textShadow: '0 0 24px rgba(0,240,255,0.45)',
-            }}
+          {/* Wrapper scales the number on hover independently of the count-flash animation */}
+          <motion.div
+            animate={reducedMotion ? {} : { scale: isHovered ? 1.05 : 1 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
           >
-            {count}{suffix}
-          </motion.span>
+            <motion.span
+              animate={numControls}
+              className="font-mono font-bold text-white leading-none"
+              style={{
+                fontSize: 'clamp(2.5rem, 5vw, 3.75rem)',
+                textShadow: '0 0 24px rgba(0,240,255,0.45)',
+              }}
+            >
+              {count}{suffix}
+            </motion.span>
+          </motion.div>
           <span className="mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-white">
             {label}
           </span>
@@ -204,6 +222,8 @@ const DRIFT_PARTICLES = [
 // ── Reception ─────────────────────────────────────────────────────────────────
 
 export default function Reception() {
+  const reducedMotion = usePrefersReducedMotion()
+
   // Track section entrance for the corridor echo overlay
   const sectionRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress: entranceProgress } = useScroll({
@@ -368,15 +388,28 @@ export default function Reception() {
               Ijaz Ahmed
             </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.7, delay: 0.35 }}
-              className="mt-6 max-w-md font-sans text-base md:text-lg text-white"
+            {/* Float wrapper: Z-breathing on the tagline — shadow deepens as text lifts */}
+            <motion.div
+              animate={reducedMotion ? {} : {
+                y: [0, -13, 0],
+                filter: [
+                  'drop-shadow(0 4px 10px rgba(0,0,0,0.55))',
+                  'drop-shadow(0 18px 30px rgba(0,0,0,0.22))',
+                  'drop-shadow(0 4px 10px rgba(0,0,0,0.55))',
+                ],
+              }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
             >
-              SEO expert who builds the websites he ranks.
-            </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.7, delay: 0.35 }}
+                className="mt-6 max-w-md font-sans text-base md:text-lg text-white"
+              >
+                SEO expert who builds the websites he ranks.
+              </motion.p>
+            </motion.div>
           </div>
         </div>
 
@@ -384,7 +417,7 @@ export default function Reception() {
         <div className="px-6 py-20">
           <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-4">
             {STATS.map((stat, i) => (
-              <StatCard key={stat.label} {...stat} delay={i * 0.12} />
+              <StatCard key={stat.label} {...stat} delay={i * 0.15} reducedMotion={reducedMotion} />
             ))}
           </div>
         </div>
