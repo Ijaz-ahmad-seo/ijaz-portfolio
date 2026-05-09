@@ -165,7 +165,7 @@ function StatCard({ end, suffix, label, delay }: StatDef & { delay: number }) {
         <div className="relative z-10 flex flex-col items-center">
           <motion.span
             animate={numControls}
-            className="font-mono font-bold text-cyan-accent leading-none"
+            className="font-mono font-bold text-white leading-none"
             style={{
               fontSize: 'clamp(2.5rem, 5vw, 3.75rem)',
               textShadow: '0 0 24px rgba(0,240,255,0.45)',
@@ -173,7 +173,7 @@ function StatCard({ end, suffix, label, delay }: StatDef & { delay: number }) {
           >
             {count}{suffix}
           </motion.span>
-          <span className="mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-white/35">
+          <span className="mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-white">
             {label}
           </span>
         </div>
@@ -373,7 +373,7 @@ export default function Reception() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.7, delay: 0.35 }}
-              className="mt-6 max-w-md font-sans text-base md:text-lg text-white/40"
+              className="mt-6 max-w-md font-sans text-base md:text-lg text-white"
             >
               SEO expert who builds the websites he ranks.
             </motion.p>
