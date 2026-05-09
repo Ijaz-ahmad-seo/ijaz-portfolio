@@ -161,6 +161,18 @@ export default function HeroHallway() {
           </div>
         </div>
 
+        {/* ── Bottom atmosphere fade ───────────────────────────── */}
+        {/* Bleeds hallway darkness down into the top of the Reception section */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-0 right-0"
+          style={{
+            height: '25vh',
+            background: 'linear-gradient(to bottom, transparent, #0A0A0A)',
+            zIndex: 10,
+          }}
+        />
+
       </div>
     </div>
   )

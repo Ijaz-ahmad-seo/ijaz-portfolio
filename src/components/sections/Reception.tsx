@@ -219,6 +219,31 @@ export default function Reception() {
   return (
     <section id="reception" className="relative" style={{ background: '#0A0A0A' }}>
 
+      {/* ── Top atmosphere fade ─────────────────────────────────────────────── */}
+      {/* Continues hallway darkness into the Reception — pairs with the Hallway's bottom fade */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 left-0 right-0"
+        style={{
+          height: '20vh',
+          background: 'linear-gradient(to bottom, #0A0A0A, transparent)',
+          zIndex: 5,
+        }}
+      />
+
+      {/* ── Soft cyan light leak from above ─────────────────────────────────── */}
+      {/* Hallway cyan atmosphere bleeding down — fades within the upper third */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 left-0 right-0"
+        style={{
+          height: '33vh',
+          background:
+            'radial-gradient(ellipse 60% 100% at 50% 0%, rgba(0,240,255,0.055) 0%, transparent 100%)',
+          zIndex: 5,
+        }}
+      />
+
       {/* ── UPGRADE 1: 3D office room background ───────────────────────────── */}
       {/* Absolutely behind all content. pointer-events-none so it doesn't eat clicks. */}
       <div

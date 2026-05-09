@@ -123,6 +123,96 @@ function DustParticles() {
   return <primitive object={system} />
 }
 
+// ── Transition particles (hallway atmosphere continuation) ────────────────────
+
+function TransitionParticlesInner() {
+  const count = 35
+
+  const system = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 12  // x: ±6
+      positions[i * 3 + 1] = 2.5 + Math.random() * 1.6   // y: 2.5–4.1 (near ceiling)
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10  // z: ±5
+
+      if (Math.random() < 0.7) {
+        // 70% cyan #00F0FF
+        colors[i * 3]     = 0
+        colors[i * 3 + 1] = 240 / 255
+        colors[i * 3 + 2] = 1
+      } else {
+        // 30% amber #FFB800
+        colors[i * 3]     = 1
+        colors[i * 3 + 1] = 184 / 255
+        colors[i * 3 + 2] = 0
+      }
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.02,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.35,
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    })
+
+    return new THREE.Points(geo, mat)
+  }, [])
+
+  const velocities = useMemo(
+    () =>
+      Array.from({ length: count }, () => ({
+        x: (Math.random() - 0.5) * 0.001,
+        y: (Math.random() - 0.5) * 0.0005,
+      })),
+    []
+  )
+
+  useFrame(() => {
+    // Fade out as user scrolls deeper than the upper third of the section
+    const section = document.getElementById('reception')
+    if (section) {
+      const scrolledIn = -section.getBoundingClientRect().top
+      const fadeZone = section.offsetHeight / 3
+      const mat = system.material as THREE.PointsMaterial
+      if (scrolledIn <= 0) {
+        mat.opacity = 0.35
+      } else if (scrolledIn >= fadeZone) {
+        mat.opacity = 0
+      } else {
+        mat.opacity = 0.35 * (1 - scrolledIn / fadeZone)
+      }
+    }
+
+    const attr = system.geometry.getAttribute('position') as THREE.BufferAttribute
+    const arr = attr.array as Float32Array
+    for (let i = 0; i < count; i++) {
+      arr[i * 3]     += velocities[i].x
+      arr[i * 3 + 1] += velocities[i].y
+      if (arr[i * 3] > 6)      arr[i * 3] = -6
+      if (arr[i * 3] < -6)     arr[i * 3] = 6
+      if (arr[i * 3 + 1] > 4.1) arr[i * 3 + 1] = 2.5
+      if (arr[i * 3 + 1] < 2.5) arr[i * 3 + 1] = 4.1
+    }
+    attr.needsUpdate = true
+  })
+
+  return <primitive object={system} />
+}
+
+function TransitionParticles() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null
+  return <TransitionParticlesInner />
+}
+
 // ── Canvas export ─────────────────────────────────────────────────────────────
 
 export default function ReceptionScene() {
@@ -136,6 +226,7 @@ export default function ReceptionScene() {
       <ambientLight intensity={0.04} color="#080814" />
       <Room />
       <DustParticles />
+      <TransitionParticles />
     </Canvas>
   )
 }
