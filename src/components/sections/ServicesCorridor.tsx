@@ -396,7 +396,7 @@ export default function ServicesCorridor() {
         <MobileGrid />
       ) : (
         // ── Desktop: 3D corridor ─────────────────────────────────────────────
-        <div ref={containerRef} style={{ height: '550vh' }} className="relative">
+        <div ref={containerRef} style={{ height: '450vh' }} className="relative">
           <div className="sticky top-0 h-screen w-full overflow-hidden">
 
             {/* 3D canvas */}
