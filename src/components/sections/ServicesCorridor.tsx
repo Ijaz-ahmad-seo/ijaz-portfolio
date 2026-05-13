@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { services } from '@/data/site'
@@ -283,6 +283,7 @@ export default function ServicesCorridor() {
   const [activeDoor, setActiveDoor] = useState<number | null>(null)
   const [showMobile, setShowMobile] = useState(false)
   const reducedMotion = useRef(false)
+  const prefersReducedMotion = useReducedMotion()
 
   // Detect mobile / no-WebGL on mount
   useEffect(() => {
@@ -452,9 +453,13 @@ export default function ServicesCorridor() {
                   className="absolute bottom-28 left-1/2 -translate-x-1/2 pointer-events-none select-none"
                   style={{ zIndex: 10 }}
                 >
-                  <span className="font-mono text-[9px] tracking-[0.4em] uppercase text-white/18">
+                  <motion.span
+                    className="font-mono text-[20px] tracking-[0.4em] uppercase text-white"
+                    animate={prefersReducedMotion ? {} : { opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                  >
                     Click a door to open
-                  </span>
+                  </motion.span>
                 </motion.div>
               )}
             </AnimatePresence>
