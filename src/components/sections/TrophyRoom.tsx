@@ -2,52 +2,39 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { caseStudies } from '@/data/site'
 import type { CaseStudy } from '@/data/site'
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V']
 
-// Salon-hang gallery wall: MYDECORYA (index 0) is the tall hero on the left.
-// Indices 1-4 fill a 2x2 grid on the right.
-const GRID_SLOTS: React.CSSProperties[] = [
-  { gridColumn: '1', gridRow: '1 / 3' }, // MYDECORYA — full left column
-  { gridColumn: '2', gridRow: '1' },      // CARE PHARMACY
-  { gridColumn: '2', gridRow: '2' },      // BATLEY PHARMACY
-  { gridColumn: '3', gridRow: '1' },      // EXETER DIESELS
-  { gridColumn: '3', gridRow: '2' },      // HOPE WELFARE TRUST
+// Short trophy metrics: numeric where available, derived from data for others
+const TROPHY_METRICS = [
+  '500K+',    // Mydecorya: from headlineMetric
+  '40%',      // Care Pharmacy: from headlineMetric
+  '#1 Local', // Batley Pharmacy: from "sustained local dominance"
+  'RANKED',   // Exeter Diesels: from "ranking on Google UK"
+  '15K+',     // Hope Welfare Trust: Claude MCP-driven SEO traffic
 ]
 
-// ─── Particles ────────────────────────────────────────────────────────────────
+const TROPHY_SUBLABELS = [
+  'Monthly organic visits',
+  'Organic traffic increase',
+  'Local dominance in UK healthcare',
+  'Used vans site on Google UK',
+  'CLAUDE MCP-DRIVEN SEO',
+]
 
-// Deterministic positions — no Math.random() to avoid hydration mismatch
-const DUST = [
-  { id: 0,  l: 8,  b: 20, d: 14, dl: 0.0,  o: 0.40 },
-  { id: 1,  l: 15, b: 55, d: 9,  dl: 1.3,  o: 0.25 },
-  { id: 2,  l: 23, b: 10, d: 12, dl: 0.7,  o: 0.35 },
-  { id: 3,  l: 32, b: 72, d: 11, dl: 2.1,  o: 0.20 },
-  { id: 4,  l: 41, b: 35, d: 8,  dl: 0.4,  o: 0.30 },
-  { id: 5,  l: 5,  b: 80, d: 15, dl: 1.8,  o: 0.20 },
-  { id: 6,  l: 58, b: 15, d: 10, dl: 0.9,  o: 0.40 },
-  { id: 7,  l: 67, b: 60, d: 13, dl: 2.5,  o: 0.25 },
-  { id: 8,  l: 75, b: 42, d: 9,  dl: 1.2,  o: 0.35 },
-  { id: 9,  l: 84, b: 88, d: 16, dl: 3.0,  o: 0.20 },
-  { id: 10, l: 92, b: 25, d: 11, dl: 0.3,  o: 0.30 },
-  { id: 11, l: 49, b: 5,  d: 8,  dl: 1.6,  o: 0.45 },
-  { id: 12, l: 19, b: 92, d: 18, dl: 2.8,  o: 0.15 },
-  { id: 13, l: 36, b: 48, d: 10, dl: 0.6,  o: 0.35 },
-  { id: 14, l: 71, b: 70, d: 13, dl: 1.9,  o: 0.20 },
-  { id: 15, l: 88, b: 38, d: 9,  dl: 0.1,  o: 0.30 },
-  { id: 16, l: 27, b: 95, d: 14, dl: 3.4,  o: 0.15 },
-  { id: 17, l: 54, b: 58, d: 7,  dl: 2.2,  o: 0.40 },
-  { id: 18, l: 63, b: 82, d: 11, dl: 1.0,  o: 0.25 },
-  { id: 19, l: 79, b: 96, d: 12, dl: 0.5,  o: 0.20 },
-  { id: 20, l: 3,  b: 65, d: 15, dl: 2.7,  o: 0.30 },
-  { id: 21, l: 44, b: 30, d: 8,  dl: 1.5,  o: 0.35 },
-  { id: 22, l: 96, b: 52, d: 10, dl: 3.2,  o: 0.20 },
-  { id: 23, l: 11, b: 44, d: 13, dl: 0.8,  o: 0.40 },
-  { id: 24, l: 37, b: 78, d: 9,  dl: 2.0,  o: 0.25 },
+// 6-column grid: top row 3 cases (each spans 2 cols), bottom 2 centered (1-col gap each side)
+const DESKTOP_SLOTS: React.CSSProperties[] = [
+  { gridColumn: '1 / 3', gridRow: '1' },
+  { gridColumn: '3 / 5', gridRow: '1' },
+  { gridColumn: '5 / 7', gridRow: '1' },
+  { gridColumn: '2 / 4', gridRow: '2' },
+  { gridColumn: '4 / 6', gridRow: '2' },
 ]
 
 // ─── JSON-LD ──────────────────────────────────────────────────────────────────
@@ -66,153 +53,211 @@ const JSON_LD = JSON.stringify({
   })),
 })
 
-// ─── TrophyFrame ─────────────────────────────────────────────────────────────
+// ─── DisplayCase ──────────────────────────────────────────────────────────────
 
-function TrophyFrame({
+function DisplayCase({
   study,
   index,
   onOpen,
-  isMobile = false,
+  wrapperRef,
+  desktopSlot,
 }: {
   study: CaseStudy
   index: number
   onOpen: (s: CaseStudy) => void
-  isMobile?: boolean
+  wrapperRef: (el: HTMLDivElement | null) => void
+  desktopSlot?: React.CSSProperties
 }) {
   const reduced = useReducedMotion()
-  const isHero = index === 0 && !isMobile
-
-  const frameStyle: React.CSSProperties = {
-    ...(isMobile ? {} : GRID_SLOTS[index]),
-    background: 'linear-gradient(145deg, #141414 0%, #0c0c0c 60%, #111 100%)',
-    border: '1px solid rgba(0,240,255,0.18)',
-    borderRadius: '4px',
-    padding: isMobile ? '1.5rem' : '1.75rem',
-    boxShadow:
-      '0 4px 24px rgba(0,0,0,0.65), 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,240,255,0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-  }
+  const [hovered, setHovered] = useState(false)
 
   return (
-    <motion.article
-      style={frameStyle}
-      className="group relative cursor-pointer select-none focus-visible:outline-none"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{
-        duration: reduced ? 0 : 0.6,
-        delay: reduced ? 0 : index * 0.1,
-        ease: 'easeOut',
+    // Wrapper: GSAP animates opacity + y on this element.
+    // opacity is NOT in the React style prop — only GSAP owns it to avoid
+    // React reconciliation resetting it on re-renders triggered by hover state.
+    <div
+      ref={wrapperRef}
+      style={{
+        aspectRatio: desktopSlot ? '3 / 4' : undefined,
+        minHeight: desktopSlot ? undefined : '220px',
+        ...desktopSlot,
       }}
-      whileHover={reduced ? {} : { scale: 1.025, transition: { duration: 0.2, ease: 'easeOut' } }}
-      onClick={() => onOpen(study)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onOpen(study)
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`Open ${study.name} case study`}
     >
-      {/* Hover glow border overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      {/* Article: handles all hover behavior, never touched by GSAP */}
+      <article
+        className="group relative h-full cursor-pointer select-none overflow-hidden focus-visible:outline-none"
         style={{
+          background: 'linear-gradient(160deg, #141414 0%, #0d0d0d 65%, #111111 100%)',
           borderRadius: '4px',
-          boxShadow:
-            'inset 0 0 0 1px rgba(0,240,255,0.5), 0 0 50px rgba(0,240,255,0.1), 0 0 100px rgba(0,240,255,0.04)',
+          padding: '1.75rem 1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.7), 0 16px 60px rgba(0,0,0,0.4)',
+          transform: hovered && !reduced ? 'translateY(-8px)' : 'translateY(0)',
+          transition: 'transform 0.35s ease',
         }}
-        aria-hidden="true"
-      />
-
-      {/* Focus ring (keyboard navigation) */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-focus-visible:opacity-100"
-        style={{
-          borderRadius: '4px',
-          boxShadow: '0 0 0 2px #00F0FF, 0 0 0 4px rgba(0,240,255,0.2)',
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={() => onOpen(study)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onOpen(study)
+          }
         }}
-        aria-hidden="true"
-      />
-
-      {/* Roman numeral + decorative line */}
-      <div className="mb-5 flex items-center gap-3" aria-hidden="true">
-        <span
-          className="shrink-0 font-mono text-[10px] tracking-[0.45em]"
-          style={{ color: 'rgba(0,240,255,0.35)' }}
-        >
-          {ROMAN[index]}
-        </span>
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${study.name} case study`}
+      >
+        {/* Amber spotlight cone descending from above — fills top portion of case */}
         <div
-          className="h-px flex-1"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0"
           style={{
-            background:
-              'linear-gradient(to right, rgba(0,240,255,0.25), rgba(0,240,255,0.05), transparent)',
+            height: '65%',
+            background: hovered && !reduced
+              ? 'radial-gradient(ellipse 80% 150% at 50% -8%, rgba(255,184,0,0.45) 0%, rgba(255,184,0,0.18) 38%, transparent 68%)'
+              : 'radial-gradient(ellipse 80% 150% at 50% -8%, rgba(255,184,0,0.22) 0%, rgba(255,184,0,0.08) 38%, transparent 68%)',
+            transition: 'background 0.4s ease',
           }}
         />
-      </div>
 
-      {/* Project name */}
-      <h3
-        className="font-sans font-bold leading-tight text-white transition-colors duration-200 group-hover:text-cyan-accent"
-        style={{ fontSize: isHero ? '1.65rem' : '1.1rem', marginBottom: '0.3rem' }}
-      >
-        {study.name}
-      </h3>
+        {/* Spotlight source dot at top center */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2"
+          style={{
+            width: '2px',
+            height: '2px',
+            borderRadius: '50%',
+            background: hovered && !reduced ? 'rgba(255,184,0,0.9)' : 'rgba(255,184,0,0.4)',
+            boxShadow: hovered && !reduced
+              ? '0 0 8px 4px rgba(255,184,0,0.5)'
+              : '0 0 4px 2px rgba(255,184,0,0.2)',
+            transition: 'all 0.4s ease',
+          }}
+        />
 
-      {/* Year */}
-      <p
-        className="mb-4 font-mono text-[10px] uppercase tracking-[0.35em]"
-        style={{ color: 'rgba(255,255,255,0.28)' }}
-      >
-        {study.year}
-      </p>
+        {/* Glass edge glow: subtle cyan border, brightens on hover */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            borderRadius: '4px',
+            border: hovered && !reduced
+              ? '1px solid rgba(0,240,255,0.85)'
+              : '1px solid rgba(0,240,255,0.14)',
+            boxShadow: hovered && !reduced
+              ? 'inset 0 0 24px rgba(0,240,255,0.07), 0 0 48px rgba(0,240,255,0.12)'
+              : 'inset 0 0 10px rgba(0,240,255,0.02)',
+            transition: 'border 0.35s ease, box-shadow 0.35s ease',
+          }}
+        />
 
-      {/* Headline metric — the trophy plaque text */}
-      <p
-        className="font-mono font-bold leading-snug"
-        style={{
-          color: '#00F0FF',
-          fontSize: isHero ? '1rem' : '0.82rem',
-          textShadow: '0 0 18px rgba(0,240,255,0.45)',
-          marginBottom: 'auto',
-        }}
-      >
-        {study.headlineMetric}
-      </p>
+        {/* Glass side-edge highlights: faint vertical lines to suggest physical case walls */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 w-px"
+          style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, transparent 40%, rgba(255,255,255,0.04) 100%)' }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-px"
+          style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, transparent 40%, rgba(255,255,255,0.04) 100%)' }}
+        />
 
-      {/* Tags */}
-      <div className="mt-5 flex flex-wrap gap-1.5">
-        {study.tags.map((tag) => (
-          <span
-            key={tag}
-            className="font-mono text-[8.5px] uppercase tracking-[0.2em]"
+        {/* Focus ring for keyboard navigation */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-focus-visible:opacity-100"
+          style={{ borderRadius: '4px', boxShadow: '0 0 0 2px #00F0FF, 0 0 0 4px rgba(0,240,255,0.2)' }}
+        />
+
+        {/* ── Case contents ── */}
+        <div className="relative z-10 flex h-full flex-col">
+
+          {/* Roman numeral label + decorative line */}
+          <div className="mb-4 flex items-center gap-3" aria-hidden="true">
+            <span
+              className="shrink-0 font-mono text-[10px] tracking-[0.5em]"
+              style={{ color: 'rgba(0,240,255,0.5)' }}
+            >
+              {ROMAN[index]}
+            </span>
+            <div
+              className="h-px flex-1"
+              style={{ background: 'linear-gradient(to right, rgba(0,240,255,0.22), rgba(0,240,255,0.05), transparent)' }}
+            />
+          </div>
+
+          {/* Push trophy toward vertical center */}
+          <div className="flex-1" />
+
+          {/* The trophy: huge amber metric number */}
+          <motion.div
+            className="mb-1 font-mono font-bold leading-none"
             style={{
-              background: 'rgba(0,240,255,0.06)',
-              border: '1px solid rgba(0,240,255,0.14)',
-              borderRadius: '2px',
-              color: 'rgba(0,240,255,0.5)',
-              padding: '2px 6px',
+              color: '#FFB800',
+              fontSize: 'clamp(2.4rem, 4.5vw, 4rem)',
+              textShadow: '0 0 32px rgba(255,184,0,0.65), 0 0 64px rgba(255,184,0,0.28)',
+              transform: hovered && !reduced ? 'scale(1.04)' : 'scale(1)',
+              transition: 'transform 0.3s ease',
+              display: 'block',
+              lineHeight: 1,
             }}
+            animate={reduced ? {} : { opacity: [0.9, 1, 0.9] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: index * 0.6 }}
           >
-            {tag}
-          </span>
-        ))}
-      </div>
+            {TROPHY_METRICS[index]}
+          </motion.div>
 
-      {/* Click hint — appears on hover */}
-      <p
-        className="mt-3 font-mono text-[9px] uppercase tracking-[0.3em] opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-        style={{ color: 'rgba(0,240,255,0.35)' }}
-        aria-hidden="true"
-      >
-        View details
-      </p>
-    </motion.article>
+          {/* Sub-label below the metric */}
+          <p
+            className="mb-5 font-mono text-[8.5px] uppercase tracking-[0.3em]"
+            style={{ color: 'rgba(255,184,0,0.5)' }}
+          >
+            {TROPHY_SUBLABELS[index]}
+          </p>
+
+          {/* Thin separator */}
+          <div
+            className="mb-4 h-px w-10"
+            aria-hidden="true"
+            style={{ background: 'linear-gradient(to right, rgba(0,240,255,0.28), transparent)' }}
+          />
+
+          {/* Project name */}
+          <h3
+            className="mb-1 font-sans font-bold leading-snug text-white"
+            style={{ fontSize: '0.95rem', letterSpacing: '0.02em' }}
+          >
+            {study.name}
+          </h3>
+
+          {/* Year */}
+          <p
+            className="mb-3 font-mono text-[9px] uppercase tracking-[0.28em]"
+            style={{ color: 'rgba(255,255,255,0.3)' }}
+          >
+            {study.year}
+          </p>
+
+          {/* Push VIEW prompt to bottom */}
+          <div className="flex-1" />
+
+          {/* VIEW CASE STUDY pulse prompt */}
+          <motion.p
+            className="font-mono text-[8px] uppercase tracking-[0.45em]"
+            style={{ color: 'rgba(0,240,255,0.55)' }}
+            animate={reduced ? {} : { opacity: [0.35, 0.8, 0.35] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: index * 0.45 }}
+            aria-hidden="true"
+          >
+            View Case Study
+          </motion.p>
+        </div>
+      </article>
+    </div>
   )
 }
 
@@ -228,7 +273,6 @@ function CaseStudyModal({
   const reduced = useReducedMotion()
   const closeRef = useRef<HTMLButtonElement>(null)
 
-  // Focus the close button when modal mounts
   useEffect(() => {
     closeRef.current?.focus()
   }, [])
@@ -266,8 +310,7 @@ function CaseStudyModal({
           background: 'linear-gradient(145deg, #141414 0%, #0d0d0d 100%)',
           border: '1px solid rgba(0,240,255,0.22)',
           borderRadius: '6px',
-          boxShadow:
-            '0 32px 96px rgba(0,0,0,0.95), 0 0 80px rgba(0,240,255,0.07)',
+          boxShadow: '0 32px 96px rgba(0,0,0,0.95), 0 0 80px rgba(0,240,255,0.07)',
         }}
       >
         {/* Sticky top bar */}
@@ -302,7 +345,6 @@ function CaseStudyModal({
 
         {/* Body */}
         <div className="px-7 pb-12 pt-6">
-          {/* Name */}
           <h2
             className="font-sans font-bold leading-tight text-white"
             style={{ fontSize: 'clamp(1.5rem, 4vw, 2.1rem)', marginBottom: '0.35rem' }}
@@ -310,7 +352,6 @@ function CaseStudyModal({
             {study.name}
           </h2>
 
-          {/* Year */}
           <p
             className="mb-6 font-mono text-[11px] uppercase tracking-[0.35em]"
             style={{ color: 'rgba(255,255,255,0.28)' }}
@@ -318,7 +359,6 @@ function CaseStudyModal({
             {study.year}
           </p>
 
-          {/* Headline metric block */}
           <div
             className="mb-7"
             style={{
@@ -341,7 +381,6 @@ function CaseStudyModal({
             </p>
           </div>
 
-          {/* Description */}
           <p
             className="mb-8 font-sans text-sm leading-relaxed sm:text-base"
             style={{ color: 'rgba(255,255,255,0.68)' }}
@@ -349,7 +388,6 @@ function CaseStudyModal({
             {study.description}
           </p>
 
-          {/* Key wins */}
           <div className="mb-8">
             <p
               className="mb-4 font-mono text-[10px] uppercase tracking-[0.45em]"
@@ -371,7 +409,6 @@ function CaseStudyModal({
             </ul>
           </div>
 
-          {/* Tags */}
           <div className="flex flex-wrap gap-2">
             {study.tags.map((tag) => (
               <span
@@ -400,12 +437,13 @@ function CaseStudyModal({
 export default function TrophyRoom() {
   const [activeStudy, setActiveStudy] = useState<CaseStudy | null>(null)
   const reduced = useReducedMotion()
+  const sectionRef = useRef<HTMLElement>(null)
+  const desktopRefs = useRef<(HTMLDivElement | null)[]>([])
+  const mobileRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Close modal on Escape
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setActiveStudy(null)
-    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveStudy(null) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
@@ -413,73 +451,116 @@ export default function TrophyRoom() {
   // Lock body scroll while modal is open
   useEffect(() => {
     document.body.style.overflow = activeStudy ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [activeStudy])
+
+  // GSAP ScrollTrigger: cases fade in + rise with 150ms stagger
+  useEffect(() => {
+    if (reduced) return
+    if (typeof window === 'undefined') return
+
+    gsap.registerPlugin(ScrollTrigger)
+
+    const isDesktop = window.innerWidth >= 1024
+    const refs = (isDesktop ? desktopRefs : mobileRefs).current.filter(Boolean) as HTMLDivElement[]
+    if (!refs.length || !sectionRef.current) return
+
+    // Set initial invisible state imperatively — React's style prop does NOT
+    // include opacity, so GSAP fully owns the inline opacity across re-renders.
+    gsap.set(refs, { opacity: 0, y: 30 })
+
+    const ctx = gsap.context(() => {
+      gsap.to(refs, {
+        opacity: 1,
+        y: 0,
+        stagger: 0.15,
+        duration: 0.7,
+        ease: 'power2.out',
+        clearProps: 'y',
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 65%',
+          once: true,
+        },
+      })
+    })
+
+    return () => ctx.revert()
+  }, [reduced])
+
+  // prefers-reduced-motion: show all cases immediately
+  useEffect(() => {
+    if (!reduced) return
+    const allRefs = [...desktopRefs.current, ...mobileRefs.current].filter(Boolean) as HTMLDivElement[]
+    allRefs.forEach((el) => { el.style.opacity = '1' })
+  }, [reduced])
 
   return (
     <section
       id="trophy-room"
+      ref={sectionRef}
       className="relative overflow-hidden"
-      style={{ minHeight: '100vh', paddingTop: '7rem', paddingBottom: '9rem' }}
+      style={{ backgroundColor: '#0A0A0A', minHeight: '100vh', paddingTop: '7rem', paddingBottom: '9rem' }}
       aria-labelledby="trophy-room-heading"
     >
-      {/* JSON-LD structured data for search engines */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
 
-      {/* Gallery spotlight atmosphere (CSS radial gradients) */}
+      {/* ── Room atmosphere layers ── */}
+
+      {/* Faint wall texture: vertical gradient lines suggesting interior paneling */}
       <div
-        className="pointer-events-none absolute inset-0"
         aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
         style={{
-          background: `
-            radial-gradient(ellipse 80% 40% at 50% -8%, rgba(0,240,255,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 50% 60% at 5% 80%, rgba(0,240,255,0.04) 0%, transparent 55%),
-            radial-gradient(ellipse 50% 55% at 95% 25%, rgba(0,240,255,0.03) 0%, transparent 55%),
-            #0A0A0A
+          backgroundImage: `
+            repeating-linear-gradient(
+              to right,
+              rgba(255,255,255,0.012) 0px, transparent 1px,
+              transparent 120px, rgba(255,255,255,0.012) 121px
+            )
           `,
         }}
       />
 
-      {/* Drifting dust particles */}
-      {!reduced && (
-        <div
-          className="pointer-events-none absolute inset-0 overflow-hidden"
-          aria-hidden="true"
-        >
-          {DUST.map((p) => (
-            <motion.div
-              key={p.id}
-              className="absolute rounded-full"
-              style={{
-                left: `${p.l}%`,
-                bottom: `${p.b}%`,
-                width: '2px',
-                height: '2px',
-                background: `rgba(0,240,255,${p.o})`,
-              }}
-              animate={{
-                y: [0, -32, 0],
-                opacity: [p.o, Math.min(p.o * 1.7, 0.75), p.o],
-              }}
-              transition={{
-                duration: p.d,
-                delay: p.dl,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Ambient radial vignette + corner cyan glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 45% 70% at 0% 50%, rgba(0,240,255,0.035) 0%, transparent 70%),
+            radial-gradient(ellipse 45% 70% at 100% 50%, rgba(0,240,255,0.035) 0%, transparent 70%),
+            radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,184,0,0.03) 0%, transparent 60%),
+            radial-gradient(ellipse 70% 50% at 50% -10%, rgba(0,0,0,0.3) 0%, transparent 100%)
+          `,
+        }}
+      />
 
-      {/* ── Content ─────────────────────────────────────────────── */}
+      {/* Polished gallery floor: reflective gradient in the bottom 28% */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 right-0"
+        style={{
+          height: '28%',
+          background: `
+            linear-gradient(
+              to top,
+              rgba(255,184,0,0.04) 0%,
+              rgba(0,240,255,0.025) 25%,
+              transparent 100%
+            )
+          `,
+          maskImage: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)',
+        }}
+      />
+
+      {/* ── Content ── */}
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
 
         {/* Section header */}
         <motion.div
-          className="mb-14"
+          className="mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -489,7 +570,7 @@ export default function TrophyRoom() {
             className="mb-3 font-mono text-[10px] uppercase tracking-[0.5em]"
             style={{ color: 'rgba(0,240,255,0.5)' }}
           >
-            05 / Selected Work
+            05 / Exhibits
           </p>
           <h2
             id="trophy-room-heading"
@@ -502,44 +583,46 @@ export default function TrophyRoom() {
             className="max-w-md font-sans"
             style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.95rem', lineHeight: '1.75' }}
           >
-            Real projects. Real results. Click any frame to read the full case study.
+            Five cases. Five wins. The numbers tell the story.
           </p>
         </motion.div>
 
-        {/* ── Desktop: salon-hang gallery wall ──────────────────── */}
+        {/* ── Desktop: 3+2 museum grid (lg+) ── */}
         <div
           className="hidden lg:grid"
           style={{
-            gridTemplateColumns: '1.65fr 1fr 1fr',
+            gridTemplateColumns: 'repeat(6, 1fr)',
             gridTemplateRows: 'auto auto',
-            gap: '1.125rem',
+            gap: '1.25rem',
           }}
         >
           {caseStudies.map((study, i) => (
-            <TrophyFrame
+            <DisplayCase
               key={study.id}
               study={study}
               index={i}
               onOpen={setActiveStudy}
+              wrapperRef={(el) => { desktopRefs.current[i] = el }}
+              desktopSlot={DESKTOP_SLOTS[i]}
             />
           ))}
         </div>
 
-        {/* ── Mobile: stacked cards ──────────────────────────────── */}
-        <div className="space-y-4 lg:hidden">
+        {/* ── Mobile + Tablet: responsive 1-2 column grid ── */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
           {caseStudies.map((study, i) => (
-            <TrophyFrame
+            <DisplayCase
               key={study.id}
               study={study}
               index={i}
               onOpen={setActiveStudy}
-              isMobile
+              wrapperRef={(el) => { mobileRefs.current[i] = el }}
             />
           ))}
         </div>
       </div>
 
-      {/* ── Case study modal ─────────────────────────────────────── */}
+      {/* ── Case study modal ── */}
       <AnimatePresence>
         {activeStudy && (
           <CaseStudyModal
