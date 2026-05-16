@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -257,12 +257,66 @@ function ContactInfoCard() {
   )
 }
 
+// ─── DustMotes ────────────────────────────────────────────────────────────────
+
+function DustMotes() {
+  const motes = useMemo(() => Array.from({ length: 20 }, (_, i) => {
+    const s = i + 1
+    return {
+      id: i,
+      x: ((s * 47) % 90) + 5,
+      y: ((s * 73) % 80) + 10,
+      size: 1 + (s % 2) * 0.8,
+      opacity: 0.2 + (s % 3) * 0.07,
+      color: s % 4 === 0 ? '#00F0FF' : '#FFB800',
+      duration: 10 + ((s * 17) % 12),
+      delay: (s * 6) % 8,
+      driftX: (s % 2 === 0 ? 1 : -1) * (8 + (s * 3) % 12),
+      driftY: -(30 + (s * 3) % 30),
+    }
+  }), [])
+
+  const keyframes = motes.map(m =>
+    `@keyframes mr-mote${m.id}{` +
+    `0%{opacity:0;transform:translate(0,0)}` +
+    `20%{opacity:${m.opacity}}` +
+    `80%{opacity:${m.opacity}}` +
+    `100%{opacity:0;transform:translate(${m.driftX}px,${m.driftY}px)}}`
+  ).join('')
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: keyframes }} />
+      {motes.map(m => (
+        <div
+          key={m.id}
+          aria-hidden="true"
+          className="pointer-events-none absolute rounded-full"
+          style={{
+            left: `${m.x}%`,
+            top: `${m.y}%`,
+            width: `${m.size}px`,
+            height: `${m.size}px`,
+            backgroundColor: m.color,
+            animation: `mr-mote${m.id} ${m.duration}s ${m.delay}s ease-in-out infinite`,
+          }}
+        />
+      ))}
+    </>
+  )
+}
+
 // ─── MeetingRoom ──────────────────────────────────────────────────────────────
 
 export default function MeetingRoom() {
   const reduced = useReducedMotion()
   const sectionRef = useRef<HTMLElement>(null)
   const colRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (reduced) return
@@ -300,7 +354,12 @@ export default function MeetingRoom() {
     border: '1px solid rgba(0,240,255,0.18)',
     borderRadius: '6px',
     padding: '2rem',
-    boxShadow: 'inset 0 0 24px rgba(0,240,255,0.03)',
+    boxShadow: [
+      'inset 0 0 24px rgba(0,240,255,0.03)',
+      '0 24px 64px rgba(0,0,0,0.75)',
+      '0 8px 24px rgba(0,0,0,0.50)',
+      '0 2px 6px rgba(0,0,0,0.40)',
+    ].join(', '),
     height: '100%',
   }
 
@@ -331,6 +390,34 @@ export default function MeetingRoom() {
         }}
       />
 
+      {/* Ambient warm light from above — desk lamp / ceiling */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: 'radial-gradient(ellipse 70% 45% at 50% -5%, rgba(255,184,0,0.08) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* Window light hint — left edge, soft daylight */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0"
+        style={{
+          width: '28%',
+          background: 'linear-gradient(90deg, rgba(220,240,255,0.12) 0%, rgba(0,240,255,0.04) 35%, transparent 100%)',
+        }}
+      />
+
+      {/* Wall depth vignette */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 130% 100% at 50% 50%, transparent 35%, rgba(0,0,0,0.45) 100%)',
+        }}
+      />
+
       {/* Film grain */}
       <div
         aria-hidden="true"
@@ -341,6 +428,9 @@ export default function MeetingRoom() {
           backgroundSize: '256px 256px',
         }}
       />
+
+      {/* Floating dust motes — skipped when prefers-reduced-motion */}
+      {mounted && !reduced && <DustMotes />}
 
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
@@ -370,33 +460,51 @@ export default function MeetingRoom() {
             className="max-w-md font-sans"
             style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.95rem', lineHeight: '1.75' }}
           >
-            Step inside the meeting room. I'm listening.
+            Pull up a chair. Let's talk.
           </p>
         </motion.div>
 
-        {/* Two-column grid: form left, info right */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Two-column grid with desk surface */}
+        <div className="relative">
 
-          {/* Form card */}
+          {/* Desk surface — polished edge where cards rest */}
           <div
-            ref={(el) => { colRefs.current[0] = el }}
-            style={{ opacity: reduced ? 1 : 0 }}
-          >
-            <div style={cardStyle}>
-              <ContactForm />
-            </div>
-          </div>
+            aria-hidden="true"
+            className="pointer-events-none absolute"
+            style={{
+              bottom: '-4px',
+              left: 0,
+              right: 0,
+              height: '2px',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,184,0,0.10) 10%, rgba(255,255,255,0.09) 30%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.09) 70%, rgba(255,184,0,0.10) 90%, transparent 100%)',
+              boxShadow: '0 0 40px rgba(255,184,0,0.07), 0 0 80px rgba(255,184,0,0.03)',
+            }}
+          />
 
-          {/* Info card */}
-          <div
-            ref={(el) => { colRefs.current[1] = el }}
-            style={{ opacity: reduced ? 1 : 0 }}
-          >
-            <div style={cardStyle}>
-              <ContactInfoCard />
-            </div>
-          </div>
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
+            {/* Form card */}
+            <div
+              ref={(el) => { colRefs.current[0] = el }}
+              style={{ opacity: reduced ? 1 : 0 }}
+            >
+              <div style={cardStyle}>
+                <ContactForm />
+              </div>
+            </div>
+
+            {/* Info card */}
+            <div
+              ref={(el) => { colRefs.current[1] = el }}
+              style={{ opacity: reduced ? 1 : 0 }}
+            >
+              <div style={cardStyle}>
+                <ContactInfoCard />
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </section>

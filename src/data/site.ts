@@ -434,5 +434,5 @@ export const contact = {
   email: 'seowithejoo@gmail.com',
   phone: '+92-330-5929561',
   linkedin: 'Ijaz Ahmed',
-  linkedinUrl: 'https://www.linkedin.com/in/ijaz-ahmed',
+  linkedinUrl: 'https://www.linkedin.com/in/ijaz-ahmadseo/',
 }
