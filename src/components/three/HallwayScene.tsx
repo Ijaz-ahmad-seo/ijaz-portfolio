@@ -2,6 +2,7 @@
 
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
 export interface SceneProgress {
@@ -296,27 +297,27 @@ function AmberHalo() {
     if (!planeRef.current) return
     const mat = planeRef.current.material as THREE.MeshBasicMaterial
     if (prefersReducedRef.current) {
-      mat.opacity = 0.18
-      lightRef.current.intensity = 2.0
+      mat.opacity = 0.09
+      lightRef.current.intensity = 0.8
       return
     }
     // Breathing pulse: period ~3.5 s, amplitude 0.6 to 1.0
     const pulse = 0.6 + Math.sin(clock.elapsedTime * 1.795) * 0.2
-    mat.opacity = pulse * 0.28
-    lightRef.current.intensity = pulse * 2.5
+    mat.opacity = pulse * 0.13
+    lightRef.current.intensity = pulse * 1.1
   })
 
   return (
     <group position={[0, 1.5, -9.1]}>
       {/* Point light slightly behind door illuminates frame edges with warm amber */}
-      <pointLight ref={lightRef} color="#FFB800" intensity={2.0} distance={6} decay={0} />
-      {/* Softbox plane — larger than door frame, additive blended, depth-test off */}
+      <pointLight ref={lightRef} color="#FFB800" intensity={0.8} distance={6} decay={0} />
+      {/* Softbox plane — door-frame sized, additive blended, depth-test off */}
       <mesh ref={planeRef}>
-        <planeGeometry args={[5.5, 4.5]} />
+        <planeGeometry args={[3.5, 3.0]} />
         <meshBasicMaterial
           color="#FFB800"
           transparent
-          opacity={0.18}
+          opacity={0.09}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           depthTest={false}
@@ -346,6 +347,15 @@ export default function HallwayScene({ progress }: { progress: SceneProgress }) 
       <Door progress={progress} />
       <FloatingParticles />
       <AmberHalo />
+
+      <EffectComposer>
+        <Bloom
+          intensity={0.15}
+          luminanceThreshold={0.45}
+          luminanceSmoothing={0.9}
+          mipmapBlur
+        />
+      </EffectComposer>
     </Canvas>
   )
 }
